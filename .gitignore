@@ -90,3 +90,9 @@ ENV/
 
 # Config file
 config.py
+
+#Saved logs
+logs/*
+!logs/.gitkeep
+debug/*
+!debug/.gitkeep
