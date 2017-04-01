@@ -1,0 +1,32 @@
+<html>
+<head>
+  <title>{{name}}: Loggs</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+</head>
+<body>
+  <div class="container">
+    <div class="row" style="margin-top: 20px; margin-bottom: 20px;">
+      <div class="col-xs-4 col-sm-3 col-md-3">
+        <img src="/static/loggbot.png" style="height: 120px;">
+      </div>
+      <div class="col-cs-8 col-sm-9 col-md-9">
+        <h1>{{name}}: Loggs <small><a href="/"><- Back</a></small></h1>
+      </div>
+    </div>
+    <table class="table table-striped" style="width:100%;">
+      <tr>
+        <th>Date</th>
+        <th>User</th>
+        <th>Text</th>
+      </tr>
+    {% for value in result %}
+       <tr>
+            <td style="width: 200px;"> {{ value['date'] }} </td>
+            <td style="width: 200px;"> {{ value['user'] }} </td>
+            <td> {{ value['text'] }} </td>
+       </tr>
+    {% endfor %}
+    </table>
+  </div>
+</body>
+</html>
