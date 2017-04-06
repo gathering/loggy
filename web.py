@@ -25,7 +25,7 @@ class Web:
         return data
 
     def createDate(date):
-        wdate = datetime.datetime.strptime(date, '%c').strftime('%m%d%y')
+        wdate = datetime.datetime.strptime(date, '%c').strftime('%y%m%d')
         return wdate
 
     def createDateList(channel):
@@ -40,10 +40,10 @@ class Web:
 
         dates = []
         for date in dateset:
-            readable = datetime.datetime.strptime(date, '%m%d%y').strftime('%A %d. %b %Y')
+            readable = datetime.datetime.strptime(date, '%y%m%d').strftime('%A %d. %b %Y')
             dates.append([date, readable])
 
-        return dates
+        return sorted(dates, key=lambda dates: dates[0])
 
     def channelDate(channel, date):
         with open('logs/'+channel+'.json') as f:
@@ -77,7 +77,7 @@ class Web:
 
     @app.route('/channel/<name>/<date>')
     def channelDateRoute(name, date):
-        readable=datetime.datetime.strptime(date, '%m%d%y').strftime('%A %d. %b %Y')
+        readable=datetime.datetime.strptime(date, '%y%m%d').strftime('%A %d. %b %Y')
         return render_template('channel.html', name=name, result=reversed(channelDate(name, date)), dates=createDateList(name), readable=readable)
 
     @app.errorhandler(404)
