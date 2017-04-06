@@ -10,9 +10,19 @@
         <img src="/static/loggbot.png" style="height: 120px;">
       </div>
       <div class="col-cs-8 col-sm-9 col-md-9">
-        <h1>{{name}}: Loggs <small><a href="/"><- Back</a></small></h1>
+        <h1>{{name}}: Loggs<small> - {% if readable %} {{readable}} - {% endif %}<a href="/"><- Back</a></small></h1>
       </div>
     </div>
+    <div class="row">
+      <div class="col-md-4 col-md-offset-8" style="text-align: right; margin-bottom: 10px;">
+        {% if readable %} <a href="/channel/{{name}}">Fjern sortering</a> - {% endif %}Sortering:<br/ >
+        <select onchange="location = '/channel/{{name}}/'+this.options[this.selectedIndex].value;">
+          <option value="" selected>Sorter etter dato</option>
+          {% for d in dates %}
+          <option value="{{ d[0] }}">{{ d[1] }}</option>
+          {% endfor %}
+        </select>
+      </div>
     <table class="table table-striped" style="width:100%;">
       <tr>
         <th>Date</th>

@@ -1,4 +1,4 @@
-import os, json, logging
+import os, json, logging, datetime
 from flask import Flask, render_template
 
 class Web:
@@ -7,6 +7,9 @@ class Web:
     global getChannels
     global app
     global shutdown_server
+    global createDateList
+    global createDate
+    global channelDate
 
     app = Flask(__name__)
 
@@ -20,6 +23,38 @@ class Web:
         with open('logs/'+channel+'.json') as f:
             data = json.load(f)
         return data
+
+    def createDate(date):
+        wdate = datetime.datetime.strptime(date, '%c').strftime('%m%d%y')
+        return wdate
+
+    def createDateList(channel):
+        with open('logs/'+channel+'.json') as f:
+            data = json.load(f)
+
+        #First, we find all uniqe dates.
+        dates = []
+        for d in data:
+            dates.append(createDate(d['date']))
+        dateset = set(dates)
+
+        dates = []
+        for date in dateset:
+            readable = datetime.datetime.strptime(date, '%m%d%y').strftime('%A %d. %b %Y')
+            dates.append([date, readable])
+
+        return dates
+
+    def channelDate(channel, date):
+        with open('logs/'+channel+'.json') as f:
+            data = json.load(f)
+        sort = []
+        for d in data:
+            curdate = createDate(d['date'])
+            if curdate == date:
+                sort.append(d)
+
+        return sort
 
     def getChannels():
         ch = []
@@ -37,8 +72,21 @@ class Web:
         return render_template('index.html', result=getChannels())
 
     @app.route('/channel/<name>')
-    def hello(name):
-        return render_template('channel.html', name=name, result=reversed(readJson(name)))
+    def channel(name):
+        return render_template('channel.html', name=name, result=reversed(readJson(name)), dates=createDateList(name))
+
+    @app.route('/channel/<name>/<date>')
+    def channelDateRoute(name, date):
+        readable=datetime.datetime.strptime(date, '%m%d%y').strftime('%A %d. %b %Y')
+        return render_template('channel.html', name=name, result=reversed(channelDate(name, date)), dates=createDateList(name), readable=readable)
+
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('error.html'), 404
+
+    @app.errorhandler(500)
+    def page_not_found(e):
+        return render_template('error.html'), 500
 
     def startWeb(args):
         logger = logging.getLogger('werkzeug')

@@ -14,6 +14,8 @@ class Bot:
     global stop_bot
     global BOT_ID
     global slack_id
+    global config
+    global easter
 
     config = Config()
 
@@ -51,32 +53,47 @@ class Bot:
             Retrieves some more info from the API if needed.
         """
 
-        channelInfo = slack_client.api_call("channels.info", channel=channel)
-        userInfo = slack_client.api_call("users.info", user=user)
+        #Help menu
+        if command == "?":
+            web_url = config.getWebURL()
+            if web_url == "":
+                web_url = "Not set in config"
+                print(" * Warning: Web URL not set in config.")
 
-        try:
-            channelName = channelInfo['channel']['name']
-        except:
-            channelName = channel
+            #Alright, so we need some kind of a help menu or something.
+            slack_client.api_call("chat.postMessage", channel=channel, text="Uhm.. Hei! Okei, dette er enkelt. Alt du trenger gjore er: Tagg meg (@logg) med noe du vil legge i loggen. \n\nF.eks. slik: '@logg Opprettet nye tilganger til Jens fra nedi gata, det var enkelt.'. \nKanskje litt annereledes, men du skjonner tegninga da! \n\nEtterhvert som man logger ting kan loggene leses i nettleseren din her: \n"+web_url+". \n\nLykke til!", as_user=True)
 
-        try:
-            userNick = userInfo['user']['name']
-        except:
-            userNick = user
+        else:
+            slack_client.api_call("reactions.add",channel=channel, name="thinking_face", timestamp=ts, as_user=True)
 
-        try:
-            realName = userInfo['user']['profile']['real_name']
+            # Create the log stuff
+            channelInfo = slack_client.api_call("channels.info", channel=channel)
+            userInfo = slack_client.api_call("users.info", user=user)
 
-        except:
-            realName = None
+            try:
+                channelName = channelInfo['channel']['name']
+            except:
+                channelName = channel
 
-        if realName != None:
-            userNick = realName + " ("+userNick+")"
+            try:
+                userNick = userInfo['user']['name']
+            except:
+                userNick = user
 
-        appendToJson(command, channelName, userNick)
-        response = "Hello "+userNick+"! You wrote: "+command
-        slack_client.api_call("reactions.add",channel=channel, name="memo", timestamp=ts, as_user=True)
+            try:
+                realName = userInfo['user']['profile']['real_name']
 
+            except:
+                realName = None
+
+            if realName != None:
+                userNick = realName + " ("+userNick+")"
+
+            appendToJson(command, channelName, userNick)
+
+            # React to the post with the log stuff.
+            slack_client.api_call("reactions.add",channel=channel, name="memo", timestamp=ts, as_user=True)
+            slack_client.api_call("reactions.remove",channel=channel, name="thinking_face", timestamp=ts, as_user=True)
 
     def parse_slack_output(slack_rtm_output):
         """
