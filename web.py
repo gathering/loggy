@@ -43,7 +43,7 @@ class Web:
             readable = datetime.datetime.strptime(date, '%y%m%d').strftime('%A %d. %b %Y')
             dates.append([date, readable])
 
-        return sorted(dates, key=lambda dates: dates[0])
+        return reversed(sorted(dates, key=lambda dates: dates[0]))
 
     def channelDate(channel, date):
         with open('logs/'+channel+'.json') as f:
