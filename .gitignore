@@ -96,3 +96,4 @@ logs/*
 !logs/.gitkeep
 debug/*
 !debug/.gitkeep
+users.json

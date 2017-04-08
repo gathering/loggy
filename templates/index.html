@@ -10,7 +10,7 @@
         <img src="/static/loggbot.png" style="height: 120px;">
       </div>
       <div class="col-cs-8 col-sm-9 col-md-9">
-        <h1>Logg Bot</h1>
+        <h1>Logg Bot <small><a href="/logout"> - logg ut</a></small></h1>
       </div>
     </div>
         <div class="row">
@@ -18,6 +18,7 @@
             <p>We are lazy. So to make logging of incidents easy, you can just tag @logg in Slack (in a channel where the bot is enabled) with some text appended after the tag, and voila, the incident is logged here.</p>
           </div>
         </div>
+      {% if isAdmin == True %} <a href="/users">Se og legg til brukere</a> {% endif %}
       <h3>Available channels:</h3>
       <table>
       {% for value in result %}

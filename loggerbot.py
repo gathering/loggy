@@ -18,7 +18,7 @@ class loggerbot:
     def startbot():
         print ' ## Starting bot thread'
         botClass = Bot()
-        botClass.startBot()
+        #botClass.startBot()
 
     if __name__ == '__main__':
 
