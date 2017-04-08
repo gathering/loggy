@@ -1,0 +1,33 @@
+<html>
+<head>
+  <title>Logg Bot</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+</head>
+<body>
+  <div class="container">
+    <div class="row" style="margin-top: 20px; margin-bottom: 20px;">
+      <div class="col-xs-4 col-sm-3 col-md-3">
+        <img src="/static/loggbot.png" style="height: 120px;">
+      </div>
+      <div class="col-cs-8 col-sm-9 col-md-9">
+        <h1>Logg Bot <small><a href="/logout"> - logg ut</a></small></h1>
+      </div>
+    </div>
+      <h3>Users:</h3>
+      <table>
+      {% for value in users %}
+         <tr>
+              <td>{{ value['username'] }} - Admin: {{ value['isAdmin'] }}</td>
+         </tr>
+      {% endfor %}
+      </table>
+      <div class="row">
+        <div class="col-md-12" style="margin-top:20px;">
+          <form action="" method="post">
+            <input type="text" name="username" placeholder="Wannabe brukernavn"> <select name="isAdmin">  <option value="False">Not admin</option> <option value="True">Admin</option></select> <button type="submit" name="submit" class="btn btn-lg btn-success">Legg til ny bruker</button>
+          </form>
+        </div>
+      </div>
+    </div>
+</body>
+</html>
