@@ -109,10 +109,10 @@ def create_date_list(channel):
     dates = []
     for d in data:
         dates.append(create_date(d['date']))
-    dateset = set(dates)
+    date_set = set(dates)
 
     dates = []
-    for date in dateset:
+    for date in date_set:
         readable = datetime.datetime.strptime(date, '%y%m%d').strftime('%A %d. %b %Y')
         dates.append([date, readable])
 
@@ -226,7 +226,7 @@ def need_to_login(e):
     return redirect(url_for('index'))
 
 
-def start_web(*args):
+def start_web():
     logger = logging.getLogger('werkzeug')
     handler = logging.FileHandler('debug/access.log')
     logger.addHandler(handler)
