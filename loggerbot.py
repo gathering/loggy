@@ -1,9 +1,10 @@
 #!/usr/bin/python
-import web
-import bot
 
 import time
-from threading import Thread
+from multiprocessing import Process
+
+import bot
+import web
 
 
 def start_web():
@@ -18,8 +19,8 @@ def start_bot():
 
 if __name__ == '__main__':
 
-    t1 = Thread(target=start_bot)
-    t2 = Thread(target=start_web)
+    t1 = Process(target=start_bot)
+    t2 = Process(target=start_web)
     t1.daemon = True
     t2.daemon = True
     t1.start()
