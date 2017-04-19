@@ -2,229 +2,233 @@ import os, json, logging, datetime, hashlib, urllib2
 from flask import Flask, render_template, request, session, escape, request, abort, redirect, url_for
 from config import Config
 
-class Web:
+app = Flask(__name__)
 
-    #Holy #### this is not best practise! :-) Please ignore
-    global readJson
-    global getChannels
-    global app
-    global shutdown_server
-    global createDateList
-    global createDate
-    global channelDate
-    global config
-    global checkLogin
-    global apiLogin
-    global doLogin
-    global checkAdmin
-    global checkUsername
-    global getAllUsers
-    global addUser
+config = Config()
+app.secret_key = config.getSecretKey()
 
-    app = Flask(__name__)
 
-    config = Config()
-    app.secret_key = config.getSecretKey()
+def api_login(username, password):
+    url = config.getApiUrl()
+    parameters = "?app=" + config.getAppKey()
+    md5 = hashlib.md5(password).hexdigest()
+    login_parameters = "&username=" + username + "&password=" + md5
+    request_url = "" + url + parameters + login_parameters
+    try:
+        r = urllib2.urlopen(request_url)
+    except:
+        return False
 
-    def apiLogin(username, password):
-        url = config.getApiUrl();
-        parameters = "?app="+config.getAppKey()
-        md5 = hashlib.md5(password).hexdigest()
-        login_parameters = "&username="+username+"&password="+md5
-        requestUrl = ""+url+parameters+login_parameters
-        try:
-            r = urllib2.urlopen(requestUrl)
-        except:
-            return False
+    data = json.loads(r.read())
+    if 'error' in data:
+        return False
+    else:
+        return True
 
-        data = json.loads(r.read())
-        if 'error' in data:
-            return False
-        else:
+
+def check_login():
+    if config.getAuth():
+        if 'username' in session:
             return True
-
-    def checkLogin():
-        if config.getAuth():
-            if 'username' in session:
-                return True
-            else:
-                return False
         else:
-            session['username'] = "dummy"
-            session['admin'] = False
-            return True
+            return False
+    else:
+        session['username'] = "dummy"
+        session['admin'] = False
+        return True
 
-    def checkUsername(username):
+
+def check_username(username):
+    with open('users.json') as f:
+        data = json.load(f)
+    result = False
+    for d in data:
+        if d['username'] == username:
+            result = True
+    return result
+
+
+def check_admin(username):
+    with open('users.json') as f:
+        data = json.load(f)
+    result = False
+    for d in data:
+        if d['username'] == username:
+            result = d['isAdmin']
+    if result == "False":
+        return False
+    else:
+        return True
+
+
+def add_user(username, isAdmin):
+    print("Added user " + username + " which is admin: " + isAdmin)
+    a_dict = {"username": username, "isAdmin": isAdmin}
+
+    data = []
+    try:
         with open('users.json') as f:
             data = json.load(f)
-        result = False
-        for d in data:
-            if d['username'] == username:
-                result = True
-        return result
+    except:
+        pass
 
-    def checkAdmin(username):
-        with open('users.json') as f:
-            data = json.load(f)
-        result = False
-        for d in data:
-            if d['username'] == username:
-                result = d['isAdmin']
-        if result == "False":
-            return False
-        else:
+    data.append(a_dict)
+
+    with open('users.json', 'w') as f:
+        json.dump(data, f)
+
+
+def get_all_users():
+    with open('users.json') as f:
+        data = json.load(f)
+    return data
+
+
+def shutdown_server():
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        raise RuntimeError('Not running with the Werkzeug Server')
+    func()
+
+
+def read_json(channel):
+    with open('logs/' + channel + '.json') as f:
+        data = json.load(f)
+    return data
+
+
+def create_date(date):
+    wdate = datetime.datetime.strptime(date, '%c').strftime('%y%m%d')
+    return wdate
+
+
+def create_date_list(channel):
+    with open('logs/' + channel + '.json') as f:
+        data = json.load(f)
+
+    # First, we find all uniqe dates.
+    dates = []
+    for d in data:
+        dates.append(create_date(d['date']))
+    dateset = set(dates)
+
+    dates = []
+    for date in dateset:
+        readable = datetime.datetime.strptime(date, '%y%m%d').strftime('%A %d. %b %Y')
+        dates.append([date, readable])
+
+    return reversed(sorted(dates, key=lambda dates: dates[0]))
+
+
+def channel_date(channel, date):
+    with open('logs/' + channel + '.json') as f:
+        data = json.load(f)
+    sort = []
+    for d in data:
+        curdate = create_date(d['date'])
+        if curdate == date:
+            sort.append(d)
+
+    return sort
+
+
+def get_channels():
+    ch = []
+    for file in os.listdir("logs"):
+        if file.endswith(".json"):
+            ch.append(file.replace(".json", ""))
+    return ch
+
+
+def do_login(username, password):
+    if api_login(username, password):
+        if check_username(username):
+            session['username'] = username
+            session['admin'] = check_admin(username)
+            print("Logged in " + username + " with admin: " + str(check_admin(username)))
             return True
-
-    def addUser(username, isAdmin):
-        print("Added user "+username+" which is admin: "+isAdmin)
-        a_dict = {"username": username,"isAdmin": isAdmin}
-
-        data = []
-        try:
-            with open('users.json') as f:
-                data = json.load(f)
-        except:
-            pass
-
-        data.append(a_dict)
-
-        with open('users.json', 'w') as f:
-            json.dump(data, f)
-
-    def getAllUsers():
-        with open('users.json') as f:
-            data = json.load(f)
-        return data
+    else:
+        return False
 
 
-    def shutdown_server():
-        func = request.environ.get('werkzeug.server.shutdown')
-        if func is None:
-            raise RuntimeError('Not running with the Werkzeug Server')
-        func()
-
-    def readJson(channel):
-        with open('logs/'+channel+'.json') as f:
-            data = json.load(f)
-        return data
-
-    def createDate(date):
-        wdate = datetime.datetime.strptime(date, '%c').strftime('%y%m%d')
-        return wdate
-
-    def createDateList(channel):
-        with open('logs/'+channel+'.json') as f:
-            data = json.load(f)
-
-        #First, we find all uniqe dates.
-        dates = []
-        for d in data:
-            dates.append(createDate(d['date']))
-        dateset = set(dates)
-
-        dates = []
-        for date in dateset:
-            readable = datetime.datetime.strptime(date, '%y%m%d').strftime('%A %d. %b %Y')
-            dates.append([date, readable])
-
-        return reversed(sorted(dates, key=lambda dates: dates[0]))
-
-    def channelDate(channel, date):
-        with open('logs/'+channel+'.json') as f:
-            data = json.load(f)
-        sort = []
-        for d in data:
-            curdate = createDate(d['date'])
-            if curdate == date:
-                sort.append(d)
-
-        return sort
-
-    def getChannels():
-        ch = []
-        for file in os.listdir("logs"):
-            if file.endswith(".json"):
-                ch.append(file.replace(".json", ""))
-        return ch
-
-    def doLogin(username, password):
-        if apiLogin(username, password):
-            if checkUsername(username):
-                session['username'] = username
-                session['admin'] = checkAdmin(username)
-                print("Logged in "+username+" with admin: "+str(checkAdmin(username)))
-                return True
-        else:
-            return False
-
-
-    @app.route('/users', methods=['GET', 'POST'])
-    def users():
-        if checkLogin():
-            if session['admin'] == True:
-                if request.method == 'POST':
-                    addUser(request.form['username'], request.form['isAdmin'])
-                    return redirect(url_for('users'))
-                else:
-                    return render_template('users.html', users=getAllUsers())
+@app.route('/users', methods=['GET', 'POST'])
+def users():
+    if check_login():
+        if session['admin'] is True:
+            if request.method == 'POST':
+                add_user(request.form['username'], request.form['isAdmin'])
+                return redirect(url_for('users'))
             else:
-                abort(403)
+                return render_template('users.html', users=get_all_users())
         else:
             abort(403)
+    else:
+        abort(403)
 
-    @app.route('/logout')
-    def logout():
-        session.pop('username', None)
-        session.pop('admin', None)
-        return redirect(url_for('index'))
 
-    @app.route('/static/<path:path>')
-    def send_static(path):
-        return send_from_directory('static', path)
+@app.route('/logout')
+def logout():
+    session.pop('username', None)
+    session.pop('admin', None)
+    return redirect(url_for('index'))
 
-    @app.route('/', methods=['POST', 'GET'])
-    def index():
-        if request.method == 'POST':
-            if request.form['login']:
-                state = doLogin(request.form['username'], request.form['password'])
-                return redirect(url_for('index'))
-            else:
-                return redirect(url_for('index'))
+
+@app.route('/static/<path:path>')
+def send_static(path):
+    return send_from_directory('static', path)
+
+
+@app.route('/', methods=['POST', 'GET'])
+def index():
+    if request.method == 'POST':
+        if request.form['login']:
+            state = do_login(request.form['username'], request.form['password'])
+            return redirect(url_for('index'))
         else:
-            if checkLogin():
-                return render_template('index.html', result=getChannels(), isAdmin=session['admin'])
-            else:
-                return render_template('login.html')
-
-    @app.route('/channel/<name>')
-    def channel(name):
-        if checkLogin():
-            return render_template('channel.html', name=name, result=reversed(readJson(name)), dates=createDateList(name))
+            return redirect(url_for('index'))
+    else:
+        if check_login():
+            return render_template('index.html', result=get_channels(), isAdmin=session['admin'])
         else:
-            abort(403)
+            return render_template('login.html')
 
-    @app.route('/channel/<name>/<date>')
-    def channelDateRoute(name, date):
-        if checkLogin():
-            readable=datetime.datetime.strptime(date, '%y%m%d').strftime('%A %d. %b %Y')
-            return render_template('channel.html', name=name, result=reversed(channelDate(name, date)), dates=createDateList(name), readable=readable)
-        else:
-            abort(403)
 
-    @app.errorhandler(404)
-    def page_not_found(e):
-        return render_template('error.html'), 404
+@app.route('/channel/<name>')
+def channel(name):
+    if check_login():
+        return render_template('channel.html', name=name, result=reversed(read_json(name)),
+                               dates=create_date_list(name))
+    else:
+        abort(403)
 
-    @app.errorhandler(500)
-    def page_not_found(e):
-        return render_template('error.html'), 500
 
-    @app.errorhandler(403)
-    def needtologin(e):
-        return redirect(url_for('index'))
+@app.route('/channel/<name>/<date>')
+def channel_date_route(name, date):
+    if check_login():
+        readable = datetime.datetime.strptime(date, '%y%m%d').strftime('%A %d. %b %Y')
+        return render_template('channel.html', name=name, result=reversed(channel_date(name, date)),
+                               dates=create_date_list(name), readable=readable)
+    else:
+        abort(403)
 
-    def startWeb(args):
-        logger = logging.getLogger('werkzeug')
-        handler = logging.FileHandler('debug/access.log')
-        logger.addHandler(handler)
-        app.run(debug=False, host='0.0.0.0', threaded=True)
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('error.html'), 404
+
+
+@app.errorhandler(500)
+def page_not_found(e):
+    return render_template('error.html'), 500
+
+
+@app.errorhandler(403)
+def need_to_login(e):
+    return redirect(url_for('index'))
+
+
+def start_web(*args):
+    logger = logging.getLogger('werkzeug')
+    handler = logging.FileHandler('debug/access.log')
+    logger.addHandler(handler)
+    app.run(debug=False, host='0.0.0.0', threaded=True)
