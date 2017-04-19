@@ -1,5 +1,12 @@
-import os, json, logging, datetime, hashlib, urllib2
-from flask import Flask, render_template, request, session, escape, request, abort, redirect, url_for, send_from_directory
+import datetime
+import hashlib
+import json
+import logging
+import os
+import urllib2
+
+from flask import Flask, render_template, session, request, abort, redirect, url_for, send_from_directory
+
 import config
 
 app = Flask(__name__)
@@ -213,16 +220,19 @@ def channel_date_route(name, date):
 
 @app.errorhandler(404)
 def page_not_found(e):
+    logging.debug(e.getMessage())
     return render_template('error.html'), 404
 
 
 @app.errorhandler(500)
 def page_not_found(e):
+    logging.debug(e.getMessage())
     return render_template('error.html'), 500
 
 
 @app.errorhandler(403)
 def need_to_login(e):
+    logging.debug(e.getMessage())
     return redirect(url_for('index'))
 
 
