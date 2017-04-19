@@ -1,16 +1,14 @@
 import time
 from slackclient import SlackClient
-from config import Config
-
-config = Config()
+import config
 
 # loggbot's ID as an environment variable
-BOT_ID = config.getBOT_ID()
+BOT_ID = config.BOT_ID
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
 
-slack_client = SlackClient(config.getSLACK_ID())
+slack_client = SlackClient(config.SLACK_ID)
 
 
 def append_to_json(text, channel, user):
@@ -40,7 +38,7 @@ def handle_command(command, channel, user, ts):
 
     # Help menu
     if command == "?":
-        web_url = config.getWebURL()
+        web_url = config.WEB_URL
         if web_url == "":
             web_url = "Not set in config"
             print(" * Warning: Web URL not set in config.")
@@ -105,7 +103,7 @@ def parse_slack_output(slack_rtm_output):
     return None, None, None, None
 
 
-def start_bot(args):
+def start_bot():
     READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
         print(" * LoggBot is connected to Slack and running!")

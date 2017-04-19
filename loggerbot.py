@@ -1,24 +1,19 @@
 #!/usr/bin/python
-from web import Web
-from bot import Bot
+import web
+import bot
 
-import threading, time
+import time
 from threading import Thread
-
-global shutdown_server
-global stop_bot
 
 
 def start_web():
     print ' ## Starting web thread'
-    webClass = Web()
-    webClass.startWeb()
+    web.start_web()
 
 
 def start_bot():
     print ' ## Starting bot thread'
-    bot_class = Bot()
-    bot_class.startBot()
+    bot.start_bot()
 
 
 if __name__ == '__main__':

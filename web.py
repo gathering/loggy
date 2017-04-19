@@ -1,16 +1,15 @@
 import os, json, logging, datetime, hashlib, urllib2
 from flask import Flask, render_template, request, session, escape, request, abort, redirect, url_for
-from config import Config
+import config
 
 app = Flask(__name__)
 
-config = Config()
-app.secret_key = config.getSecretKey()
+app.secret_key = config.SECRET_KEY
 
 
 def api_login(username, password):
-    url = config.getApiUrl()
-    parameters = "?app=" + config.getAppKey()
+    url = config.API_URL
+    parameters = "?app=" + config.APP_KEY
     md5 = hashlib.md5(password).hexdigest()
     login_parameters = "&username=" + username + "&password=" + md5
     request_url = "" + url + parameters + login_parameters
@@ -27,7 +26,7 @@ def api_login(username, password):
 
 
 def check_login():
-    if config.getAuth():
+    if config.AUTH_EN:
         if 'username' in session:
             return True
         else:
@@ -61,9 +60,9 @@ def check_admin(username):
         return True
 
 
-def add_user(username, isAdmin):
-    print("Added user " + username + " which is admin: " + isAdmin)
-    a_dict = {"username": username, "isAdmin": isAdmin}
+def add_user(username, is_admin):
+    print("Added user " + username + " which is admin: " + is_admin)
+    a_dict = {"username": username, "isAdmin": is_admin}
 
     data = []
     try:
@@ -194,7 +193,7 @@ def index():
 
 
 @app.route('/channel/<name>')
-def channel(name):
+def show_channel(name):
     if check_login():
         return render_template('channel.html', name=name, result=reversed(read_json(name)),
                                dates=create_date_list(name))
