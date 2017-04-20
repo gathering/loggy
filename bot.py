@@ -96,10 +96,15 @@ def parse_slack_output(slack_rtm_output):
         for output in output_list:
             if output and 'text' in output and AT_BOT in output['text']:
                 # return text after the @ mention, whitespace removed
-                return output['text'].split(AT_BOT)[1].strip(), \
-                       output['channel'], \
-                       output['user'], \
-                       output['ts']
+                try:
+                    return output['text'].split(AT_BOT)[1].strip(), \
+                           output['channel'], \
+                           output['user'], \
+                           output['ts']
+                except:
+                    # Dette er noe magi vi fant ut av på crewfesten. Ble ratta inn via mobil på Slack-IRC versjonen,
+                    # men ikke her. Den bør nok vaere her ogsaa, ja!
+                    print("[ERROR] Failed to return slack output from function due to invalid response.")
     return None, None, None, None
 
 
