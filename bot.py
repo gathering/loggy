@@ -102,8 +102,7 @@ def parse_slack_output(slack_rtm_output):
                            output['user'], \
                            output['ts']
                 except:
-                    # Dette er noe magi vi fant ut av på crewfesten. Ble ratta inn via mobil på Slack-IRC versjonen,
-                    # men ikke her. Den bør nok vaere her ogsaa, ja!
+                    # Magical thing we fixed via mobile ssh at the crewparty. Needs to be here aswell.
                     print("[ERROR] Failed to return slack output from function due to invalid response.")
     return None, None, None, None
 
