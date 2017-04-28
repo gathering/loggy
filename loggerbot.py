@@ -1,36 +1,33 @@
 #!/usr/bin/python
-from web import Web
-from bot import Bot
 
-import threading, time
-from threading import Thread
+import time
+from multiprocessing import Process
 
-class loggerbot:
+import bot
+import web
 
-    global shutdown_server
-    global stop_bot
 
-    def startweb():
-        print ' ## Starting web thread'
-        webClass = Web()
-        webClass.startWeb()
+def start_web():
+    print ' ## Starting web thread'
+    web.start_web()
 
-    def startbot():
-        print ' ## Starting bot thread'
-        botClass = Bot()
-        botClass.startBot()
 
-    if __name__ == '__main__':
+def start_bot():
+    print ' ## Starting bot thread'
+    bot.start_bot()
 
-        t1 = Thread(target = startbot)
-        t2 = Thread(target = startweb)
-        t1.daemon = True
-        t2.daemon = True
-        t1.start()
-        t2.start()
 
-        try:
-            while 1:
-                time.sleep(.1)
-        except KeyboardInterrupt:
-            print(" ## Thank you and welcome back to Logger Bot for Slack!")
+if __name__ == '__main__':
+
+    t1 = Process(target=start_bot)
+    t2 = Process(target=start_web)
+    t1.daemon = True
+    t2.daemon = True
+    t1.start()
+    t2.start()
+
+    try:
+        while 1:
+            time.sleep(.1)
+    except KeyboardInterrupt:
+        print(" ## Thank you and welcome back to Logger Bot for Slack!")
