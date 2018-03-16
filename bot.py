@@ -6,6 +6,8 @@ from config import Config
 
 class Bot:
 
+# This code sucks.
+
     global slack_client
     global AT_BOT
     global appendToJson
@@ -112,7 +114,7 @@ class Bot:
                            output['user'], \
                            output['ts']
 		    except:
-			# Magical thing we fixed via mobile ssh at the crewparty. Needs to be here aswell. 
+			# Magical thing we fixed via mobile ssh at the crewparty. Needs to be here aswell.
 			print("[ERROR] Failed to return slack output from function due to invalid response.")
         return None, None, None, None
 
