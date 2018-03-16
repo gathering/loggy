@@ -5,6 +5,7 @@ import config
 # loggbot's ID as an environment variable
 BOT_ID = config.BOT_ID
 
+
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
 
@@ -127,3 +128,4 @@ def stop_bot(self):
     if self.process is not None:
         self.process.terminate()
         self.process = None
+
