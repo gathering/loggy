@@ -122,8 +122,9 @@ def find_user_id(username):
 def find_channel_id_in_users_access(data, channel):
     looking=True
     result=-1
+    i=0
     while looking==True:
-        if data[i]['channel'] == channel:
+        if data["channels"][i]['channel'] == channel:
             result=i
             looking=False
         else:
@@ -153,26 +154,27 @@ def give_user_access_to_channel(username, channel, admin=False):
     allusers=load_users()
     userid=find_user_id(username)
     try:
-        allusers[userid][channels].append({"channel":channel, "admin":admin})
+        allusers[userid]["channels"].append({"channel":channel, "admin":admin})
     except:
-        print("Could not user to channel")
+        print("Could not add user to channel")
     write_users(allusers)
 
 
 def check_access(username, channel):
     user = get_user(username)
-    channelid=find_channel_id_in_users_access(user, channel)
+    r=False
     try:
         if user['isAdmin'] == True:
-            return True
+            r=True
         else:
+            channelid=find_channel_id_in_users_access(user, channel)
             if user["channels"][channelid]['admin'] == True:
-                return True
+                r=True
             else:
-                return False
-    except:
-        print("ERROR: Failed to retrieve access for "+str(username)+" in channel "+str(channel))
-        return False
+                r=False
+    except Exception as e:
+        print("ERROR: Failed to retrieve access for "+str(username)+" in channel "+str(channel)+". Error: "+str(e))
+    return r
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
@@ -255,19 +257,23 @@ def users():
     else:
         abort(403)
 
-@app.route('/users/give-admin/<channel>/<user>', methods=['GET'])
+@app.route('/users/<channel>')
+def users_channel(channel):
+    return channel
+
+@app.route('/users/<channel>/add-user/<user>', methods=['GET'])
 def web_add_admin_to_channel(channel, user):
-    if check_access(session['username'], channel):
+    if session['admin'] or check_access(session['username'], channel):
         give_admin_to_channel(user, channel)
-        return redirect(url_for(users.html))
+        return redirect(url_for("users"))
     else:
         return abort(403)
 
-@app.route('/users/add-to-channel/<channel>/<user>', methods=['POST'])
+@app.route('/users/<channel>/add-admin/<user>', methods=['GET'])
 def web_add_to_channel(channel, user):
     if check_access(session['username'], channel):
         give_user_access_to_channel(user, channel)
-        return redirect(url_for(users.html))
+        return redirect(url_for("users"))
     else:
         return abort(403)
 
