@@ -66,22 +66,26 @@ def check_admin(username):
     else:
         return True
 
-
-def add_user(username, is_admin):
-    print("Added user " + username + " which is admin: " + is_admin)
-    a_dict = {"username": username, "isAdmin": is_admin}
-
-    data = []
+def load_users():
     try:
         with open('users.json') as f:
             data = json.load(f)
     except:
-        pass
+        print("Failed to open users file.")
+    return data
 
-    data.append(a_dict)
-
+def write_users(data):
     with open('users.json', 'w') as f:
         json.dump(data, f)
+
+
+def add_user(username, is_admin):
+    print("Added user " + username + " which is admin: " + is_admin)
+    a_dict = {"username": username, "isAdmin": is_admin, "channels":[{"channel":"general", "admin":False}]}
+
+    data = load_users()
+    data.append(a_dict)
+    write_users(data)
 
 
 def get_all_users():
@@ -89,6 +93,86 @@ def get_all_users():
         data = json.load(f)
     return data
 
+def get_user(username):
+    allusers = load_users()
+    i=0
+    looking=True
+    result=None
+    while looking==True:
+        if allusers[i]['username'] == username:
+            result=allusers[i]
+            looking=False
+        else:
+            i=i+1
+    return result
+
+def find_user_id(username):
+    allusers = load_users()
+    i=0
+    looking=True
+    result=-1
+    while looking==True:
+        if allusers[i]['username'] == username:
+            result=i
+            looking=False
+        else:
+            i=i+1
+    return result
+
+def find_channel_id_in_users_access(data, channel):
+    looking=True
+    result=-1
+    while looking==True:
+        if data[i]['channel'] == channel:
+            result=i
+            looking=False
+        else:
+            i=i+1
+    return result
+
+def create_list_of_channels_which_user_is_admin_of(username):
+    user=get_user(username)
+    chlst=[]
+    for channel in user[channels]:
+        if channel['admin'] == True:
+            chlist.append(channel["channel"])
+    return chlst
+
+def give_admin_to_channel(username, channel):
+    allusers=load_users()
+    userid=find_user_id(username)
+    channelid=find_channel_id_in_users_access(allusers, channel)
+    try:
+        allusers[userid][channels][channelid]['admin']=True
+        write_users(allusers)
+    except:
+        print("Could not add admin to channel")
+
+
+def give_user_access_to_channel(username, channel, admin=False):
+    allusers=load_users()
+    userid=find_user_id(username)
+    try:
+        allusers[userid][channels].append({"channel":channel, "admin":admin})
+    except:
+        print("Could not user to channel")
+    write_users(allusers)
+
+
+def check_access(username, channel):
+    user = get_user(username)
+    channelid=find_channel_id_in_users_access(user, channel)
+    try:
+        if user['isAdmin'] == True:
+            return True
+        else:
+            if user["channels"][channelid]['admin'] == True:
+                return True
+            else:
+                return False
+    except:
+        print("ERROR: Failed to retrieve access for "+str(username)+" in channel "+str(channel))
+        return False
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
@@ -165,12 +249,27 @@ def users():
                 add_user(request.form['username'], request.form['isAdmin'])
                 return redirect(url_for('users'))
             else:
-                return render_template('users.html', users=get_all_users())
+                return render_template('users.html', users=get_all_users(), user=get_user(session['username']))
         else:
             abort(403)
     else:
         abort(403)
 
+@app.route('/users/give-admin/<channel>/<user>', methods=['GET'])
+def web_add_admin_to_channel(channel, user):
+    if check_access(session['username'], channel):
+        give_admin_to_channel(user, channel)
+        return redirect(url_for(users.html))
+    else:
+        return abort(403)
+
+@app.route('/users/add-to-channel/<channel>/<user>', methods=['POST'])
+def web_add_to_channel(channel, user):
+    if check_access(session['username'], channel):
+        give_user_access_to_channel(user, channel)
+        return redirect(url_for(users.html))
+    else:
+        return abort(403)
 
 @app.route('/logout')
 def logout():
