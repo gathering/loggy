@@ -1,6 +1,7 @@
 import time
 from slackclient import SlackClient
 import config
+import re
 
 # loggbot's ID as an environment variable
 BOT_ID = config.BOT_ID
@@ -29,6 +30,17 @@ def append_to_json(text, channel, user):
     with open('logs/' + channel + '.json', 'w') as f:
         json.dump(data, f)
 
+def replace_usernames(line):
+    regex=re.compile(r"<+@+[\w\.-]+>")
+    occurences=regex.findall(line)
+    for user in occurences:
+        try:
+            user_info = slack_client.api_call("users.info", user=user.replace("<@","").replace(">","")) #so lazy
+            line=line.replace(user, "@"+user_info['user']['name'])
+        except:
+            print("user not found")
+
+    return line
 
 def handle_command(command, channel, user, ts):
     """
@@ -83,7 +95,7 @@ def handle_command(command, channel, user, ts):
         if real_name is not None:
             user_nick = real_name + " (" + user_nick + ")"
 
-        append_to_json(command, channel_name, user_nick)
+        append_to_json(replace_usernames(command), channel_name, user_nick)
 
         # React to the post with the log stuff.
         slack_client.api_call("reactions.add", channel=channel, name="memo", timestamp=ts, as_user=True)
