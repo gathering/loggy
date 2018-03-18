@@ -405,19 +405,16 @@ def channel_date_route(name, date):
 
 @app.errorhandler(404)
 def page_not_found(e):
-    logging.debug(e.getMessage())
     return render_template('error.html')
 
 
 @app.errorhandler(500)
 def page_not_found(e):
-    logging.debug(e.getMessage())
     return render_template('error.html')
 
 
 @app.errorhandler(403)
 def need_to_login(e):
-    logging.debug(e.getMessage())
     return redirect(url_for('index'))
 
 
