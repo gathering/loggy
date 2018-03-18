@@ -22,6 +22,9 @@
           <option value="{{ d[0] }}">{{ d[1] }}</option>
           {% endfor %}
         </select>
+        {% if check_access(username, name) %}
+          <p><a href="/users/{{name}}">Admin page</a></p>
+        {% endif %}
       </div>
     <table class="table table-striped" style="width:100%;">
       <tr>

@@ -4,7 +4,7 @@ import json
 import logging
 import os
 import urllib2
-
+from sets import Set
 from flask import Flask, render_template, session, request, abort, redirect, url_for, send_from_directory
 
 import config
@@ -131,6 +131,24 @@ def find_channel_id_in_users_access(data, channel):
             i=i+1
     return result
 
+def find_channel_memers(channel_look):
+    data = load_users()
+    result=[]
+    for user in data:
+        for channel in user["channels"]:
+            if channel["channel"] == channel_look:
+                result.append(user)
+    return result
+
+def find_channels_which_user_is_a_member_of(username):
+    data = load_users()
+    userid=find_user_id(username)
+    chlist=[]
+    for ch in data[userid]["channels"]:
+        chlist.append(ch["channel"])
+    return chlist
+
+
 def create_list_of_channels_which_user_is_admin_of(username):
     user=get_user(username)
     chlst=[]
@@ -140,11 +158,15 @@ def create_list_of_channels_which_user_is_admin_of(username):
     return chlst
 
 def give_admin_to_channel(username, channel):
+    #A bit misleading - this also reverrses if ran against a user that is already channel admin
     allusers=load_users()
     userid=find_user_id(username)
-    channelid=find_channel_id_in_users_access(allusers, channel)
+    channelid=find_channel_id_in_users_access(allusers[userid], channel)
     try:
-        allusers[userid][channels][channelid]['admin']=True
+        if allusers[userid]["channels"][channelid]['admin']:
+            allusers[userid]["channels"][channelid]['admin']=False
+        else:
+            allusers[userid]["channels"][channelid]['admin']=True
         write_users(allusers)
     except:
         print("Could not add admin to channel")
@@ -164,7 +186,7 @@ def check_access(username, channel):
     user = get_user(username)
     r=False
     try:
-        if user['isAdmin'] == True:
+        if user['isAdmin'] == "True":
             r=True
         else:
             channelid=find_channel_id_in_users_access(user, channel)
@@ -175,6 +197,17 @@ def check_access(username, channel):
     except Exception as e:
         print("ERROR: Failed to retrieve access for "+str(username)+" in channel "+str(channel)+". Error: "+str(e))
     return r
+
+def check_access_channel(username, channel):
+    user_channels = find_channels_which_user_is_a_member_of(username)
+    rv=False
+    for ch in user_channels:
+        if ch == channel:
+            rv=True
+    if check_admin(username):
+        rv=True
+    return rv
+
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
@@ -231,10 +264,25 @@ def get_channels():
             ch.append(file.replace(".json", ""))
     return ch
 
+def get_channels_filtered_for_user(username):
+    user_channels = find_channels_which_user_is_a_member_of(username)
+    all_channels = get_channels()
+    if check_admin(username):
+        return all_channels
+    else:
+        return set(all_channels) & set(user_channels)
+
 
 def do_login(username, password):
     if api_login(username, password):
+        username = username.lower()
         if check_username(username):
+            session['username'] = username
+            session['admin'] = check_admin(username)
+            print("Logged in " + username + " with admin: " + str(check_admin(username)))
+            return True
+        else:
+            add_user(username, "False")
             session['username'] = username
             session['admin'] = check_admin(username)
             print("Logged in " + username + " with admin: " + str(check_admin(username)))
@@ -248,10 +296,10 @@ def users():
     if check_login():
         if session['admin'] is True:
             if request.method == 'POST':
-                add_user(request.form['username'], request.form['isAdmin'])
+                add_user(request.form['username'].lower(), request.form['isAdmin'])
                 return redirect(url_for('users'))
             else:
-                return render_template('users.html', users=get_all_users(), user=get_user(session['username']))
+                return render_template('users.html', users=get_all_users(), user=get_user(session['username']), check_access=check_access, channelview=None)
         else:
             abort(403)
     else:
@@ -259,21 +307,47 @@ def users():
 
 @app.route('/users/<channel>')
 def users_channel(channel):
-    return channel
+    if check_login():
+        if session['admin'] or check_access(session['username'], channel):
+            return render_template('users.html', users=find_channel_memers(channel), user=get_user(session['username']), check_access=check_access, channelview=channel)
+        else:
+            abort(403)
+    else:
+        abort(403)
 
-@app.route('/users/<channel>/add-user/<user>', methods=['GET'])
+@app.route('/users/<channel>/add-admin/<user>', methods=['GET'])
 def web_add_admin_to_channel(channel, user):
+    if not check_login():
+        abort(403)
     if session['admin'] or check_access(session['username'], channel):
         give_admin_to_channel(user, channel)
-        return redirect(url_for("users"))
+        return redirect(redirect_back())
     else:
         return abort(403)
 
-@app.route('/users/<channel>/add-admin/<user>', methods=['GET'])
-def web_add_to_channel(channel, user):
+def redirect_back(default='index'):
+    return request.args.get('next') or \
+           request.referrer or \
+           url_for(default)
+
+@app.route('/users/<channel>/add-user', methods=['POST'])
+def web_add_to_channel(channel):
+    if not check_login():
+        abort(403)
     if check_access(session['username'], channel):
-        give_user_access_to_channel(user, channel)
-        return redirect(url_for("users"))
+        give_user_access_to_channel(request.form['user'], channel, request.form['admin'])
+        return redirect(redirect_back())
+    else:
+        return abort(403)
+
+@app.route('/users/<user>/add-channel', methods=['post'])
+def post_add_to_channel(user):
+    if not check_login():
+        abort(403)
+    channel = request.form['channel']
+    if check_access(session['username'], channel):
+        give_user_access_to_channel(user, channel, request.form['admin'])
+        return redirect(redirect_back())
     else:
         return abort(403)
 
@@ -293,22 +367,28 @@ def send_static(path):
 def index():
     if request.method == 'POST':
         if request.form['login']:
-            state = do_login(request.form['username'], request.form['password'])
+            state = do_login(request.form['username'].lower(), request.form['password'])
             return redirect(url_for('index'))
         else:
             return redirect(url_for('index'))
     else:
         if check_login():
-            return render_template('index.html', result=get_channels(), isAdmin=session['admin'])
+            return render_template('index.html', result=get_channels_filtered_for_user(session['username']), isAdmin=session['admin'])
         else:
             return render_template('login.html')
 
+@app.route('/channel')
+def gotohomedamnyou():
+    return redirect(url_for('index'))
 
 @app.route('/channel/<name>')
 def show_channel(name):
     if check_login():
-        return render_template('channel.html', name=name, result=reversed(read_json(name)),
-                               dates=create_date_list(name))
+        if check_access_channel(session['username'], name):
+            return render_template('channel.html', name=name, result=reversed(read_json(name)),
+                                   dates=create_date_list(name), check_access=check_access, username=session['username'])
+        else:
+            abort(403)
     else:
         abort(403)
 
@@ -326,13 +406,13 @@ def channel_date_route(name, date):
 @app.errorhandler(404)
 def page_not_found(e):
     logging.debug(e.getMessage())
-    return render_template('error.html'), 404
+    return render_template('error.html')
 
 
 @app.errorhandler(500)
 def page_not_found(e):
     logging.debug(e.getMessage())
-    return render_template('error.html'), 500
+    return render_template('error.html')
 
 
 @app.errorhandler(403)

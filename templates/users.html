@@ -7,19 +7,39 @@
   <div class="container">
     <div class="row" style="margin-top: 20px; margin-bottom: 20px;">
       <div class="col-xs-4 col-sm-3 col-md-3">
-        <img src="/static/loggbot.png" style="height: 120px;">
+        <a href="/"><img src="/static/loggbot.png" style="height: 120px;"></a>
       </div>
       <div class="col-cs-8 col-sm-9 col-md-9">
         <h1>Logg Bot <small><a href="/logout"> - logg ut</a></small></h1>
       </div>
     </div>
+
+    {%if user['isAdmin'] == "True" %}
     <div class="row">
       <div class="col-md-12" style="margin-top:20px;">
         <form action="" method="post">
+          <p>Manually add a user to the system (so you dont have to wait for them to login first before you can give permissions):</p>
           <input type="text" name="username" placeholder="Wannabe brukernavn"> <select name="isAdmin">  <option value="False">Not global admin</option> <option value="True">Global admin</option></select> <button type="submit" name="submit" class="btn btn-lg btn-success">Legg til ny bruker</button>
         </form>
       </div>
     </div>
+    {% endif %}
+
+    {% if channelview != None %}
+    <div class="row">
+      <div class="col-md-12">
+        <p>Add a user to {{ channelview }}:</p>
+        <form method="post" action="/users/{{ channelview }}/add-user">
+          <input type="text" placeholder="Wannabe Username" name="user">
+          <select name="admin">
+            <option value="True">Admin</option>
+            <option value="False" selected>Not admin</option>
+          </select>
+          <input type="Submit" value="Add">
+        </form>
+      </div>
+    </div>
+    {% endif %}
     <div class="row">
       <div class="col-md-12">
       <h3>Users:</h3>
@@ -27,13 +47,25 @@
       {% for value in users %}
               <div class="panel panel-default">
                 <div class="panel-body">
-                  <h3>{{ value['username'] }}<small> - Global admin: {{ value['isAdmin'] }}</small></h3>
-                  <h4>Access to the following channels:</h4>
+                  <h4>{{ value['username'] }}<small>{%if user['isAdmin'] == "True" %} - Global admin: {{ value['isAdmin'] }}{% endif %}</small></h4>
+
+                  <h5>Access to the following channels:</h5>
                   <ul>
                     {% for channel in value.channels %}
-                      <li>{{ channel['channel'] }} - Admin: {{ channel['admin'] }}
+                      <li>{{ channel['channel'] }} - Admin: {{ channel['admin'] }} - <a href="/users/{{ channel['channel'] }}/add-admin/{{ value['username'] }}">{%if check_access(session['username'], channel['channel']) %}{%if channel['admin'] == True %} Remove {% else %} Give {% endif %} admin{% endif %}</a></li>
                     {% endfor %}
                   </ul>
+
+                  {%if user['isAdmin'] == "True" %}
+                  <form method="post" action="/users/{{value['username']}}/add-channel">
+                    <input type="text" placeholder="Channel name (without #)" name="channel">
+                    <select name="admin">
+                      <option value="True">Admin</option>
+                      <option value="False" selected>Not admin</option>
+                    </select>
+                    <input type="Submit" value="Add">
+                  </form>
+                  {% endif %}
                 </div>
               </div>
       {% endfor %}
