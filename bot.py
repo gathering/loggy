@@ -63,7 +63,11 @@ def handle_command(command, channel, user, ts):
         try:
             channel_name = channel_info['channel']['name']
         except:
-            channel_name = channel
+            private_info = slack_client.api_call("groups.info", channel=channel)
+            try:
+                channel_name = private_info['group']['name']
+            except:
+                channel_name = channel
 
         try:
             user_nick = user_info['user']['name']
@@ -128,4 +132,3 @@ def stop_bot(self):
     if self.process is not None:
         self.process.terminate()
         self.process = None
-
