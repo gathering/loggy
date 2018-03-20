@@ -140,7 +140,7 @@ def start_bot():
 
 
 def stop_bot(self):
-    print "Trying to stop thread "
+    print()"Trying to stop thread")
     if self.process is not None:
         self.process.terminate()
         self.process = None
