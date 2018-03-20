@@ -98,10 +98,10 @@ def get_user(username):
     i=0
     looking=True
     result=None
-    while looking==True:
-        if allusers[i]['username'] == username:
+    for user in allusers:
+        if user['username'] == username:
             result=allusers[i]
-            looking=False
+            break
         else:
             i=i+1
     return result
@@ -111,10 +111,10 @@ def find_user_id(username):
     i=0
     looking=True
     result=-1
-    while looking==True:
-        if allusers[i]['username'] == username:
+    for user in allusers:
+        if user['username'] == username:
             result=i
-            looking=False
+            break
         else:
             i=i+1
     return result
@@ -128,6 +128,8 @@ def find_channel_id_in_users_access(data, channel):
             result=i
             looking=False
         else:
+            if i==len(data["channels"]):
+                looking=False
             i=i+1
     return result
 
@@ -159,11 +161,13 @@ def create_list_of_channels_which_user_is_admin_of(username):
 
 def give_admin_to_channel(username, channel):
     #A bit misleading - this also reverrses if ran against a user that is already channel admin
-    allusers=load_users()
     userid=find_user_id(username)
+    if userid == -1:
+        add_user(username, "False")
+    allusers=load_users()
     channelid=find_channel_id_in_users_access(allusers[userid], channel)
     try:
-        if allusers[userid]["channels"][channelid]['admin']:
+        if allusers[userid]["channels"][channelid]['admin'] or allusers[userid]["channels"][channelid]['admin']=="True":
             allusers[userid]["channels"][channelid]['admin']=False
         else:
             allusers[userid]["channels"][channelid]['admin']=True
@@ -173,9 +177,17 @@ def give_admin_to_channel(username, channel):
 
 
 def give_user_access_to_channel(username, channel, admin=False):
-    allusers=load_users()
+
     userid=find_user_id(username)
+    if userid == -1:
+        add_user(username, "False")
+    allusers=load_users()
     try:
+        if admin=="True":
+            admin=True
+        elif admin=="False":
+            admin=False
+
         allusers[userid]["channels"].append({"channel":channel, "admin":admin})
     except:
         print("Could not add user to channel")
@@ -243,7 +255,6 @@ def create_date_list(channel):
         dates.append([date, readable])
 
     return reversed(sorted(dates, key=lambda dates: dates[0]))
-
 
 def channel_date(channel, date):
     with open('logs/' + channel + '.json') as f:
