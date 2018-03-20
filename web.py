@@ -418,8 +418,14 @@ def need_to_login(e):
     return redirect(url_for('index'))
 
 
-def start_web():
+def start_web(environ = None, start_response = None):
     logger = logging.getLogger('werkzeug')
     handler = logging.FileHandler('debug/access.log')
     logger.addHandler(handler)
+    gunicorn_logger = logging.getLogger('gunicorn.erro')
+    app.logger.handlers = gunicorn_logger.handlers
+    app.logger.setLevel(gunicorn_logger.level)
     app.run(debug=False, host='0.0.0.0', threaded=True)
+
+if __name__ == "__main__":
+    start_web()
