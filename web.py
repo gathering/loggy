@@ -7,7 +7,7 @@ import os
 import urllib2
 from contextlib import suppress
 from sets import Set
-from flask import Flask, render_template, session, request, abort, redirect, url_for, send_from_directory
+from flask import Flask, render_template, session, request, abort, redirect, url_for, send_from_directory, jsonify
 
 import config
 
@@ -441,7 +441,12 @@ def store_message():
     with open(channel_logfile) as f:
         json.dump(data, f)
 
-    return "Logged", 200
+    response = {
+        "response_type": "in_channel",
+        "text": "Logged"
+    }
+
+    return jsonify(response), 200
 
 
 @app.errorhandler(404)
