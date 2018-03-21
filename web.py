@@ -420,7 +420,7 @@ def channel_date_route(name, date):
 def store_message():
 
     if request.form.get("token") != config.SLACK_TOKEN:
-        abort(401)
+        return "Slack app token is invalid", 401
 
     a_dict = {
         "user": request.form.get('user_id'),
@@ -438,13 +438,20 @@ def store_message():
 
     data.append(a_dict)
 
-    with open(channel_logfile) as f:
-        json.dump(data, f)
+    try:
+        with open(channel_logfile) as f:
+            json.dump(data, f)
+    except:
+        return "Something done goofed", 500
 
     response = {
-        "response_type": "in_channel",
         "text": "Logged"
     }
+
+    if request.form.get('command') == "/log":
+        response.response_type = "in_channel"
+    elif request.form.get('command') == "/silentlog":
+        response.response_type = "ephemeral"
 
     return jsonify(response), 200
 
