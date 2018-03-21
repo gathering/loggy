@@ -6,6 +6,7 @@ Please make sure to rename this file to "config.py" and enter correct details in
 
 BOT_ID = ""  # CHANGE THIS TO THE BOT USER ID
 SLACK_ID = ""  # CHANGE THIS TO THE SLACK API ID
+SLACK_TOKEN = "" # Slack token to validate messages from slack
 WEB_URL = ""  # USED TO RETURN TO USER WHERE TO FIND LOGS IN HELP MENU
 API_URL = ""  # API URL
 APP_KEY = ""  # APP KEY

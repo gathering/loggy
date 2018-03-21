@@ -1,9 +1,11 @@
 import datetime
+import time
 import hashlib
 import json
 import logging
 import os
 import urllib2
+from contextlib import suppress
 from sets import Set
 from flask import Flask, render_template, session, request, abort, redirect, url_for, send_from_directory
 
@@ -412,6 +414,34 @@ def channel_date_route(name, date):
                                dates=create_date_list(name), readable=readable, check_access=check_access, username=session['username'])
     else:
         abort(403)
+
+
+@app.route('/log', method=["POST"])
+def store_message():
+
+    if request.form.get("token") != config.SLACK_TOKEN:
+        abort(401)
+
+    a_dict = {
+        "user": request.form.get('user_id'),
+        "date": time.strftime("%c"),
+        "text": request.form.get('text')
+    }
+
+    channel_logfile = 'logs/' + request.form.get("channel_name") + '.json'
+
+    data = []
+
+    with suppress:
+        with open(channel_logfile) as f:
+            data = json.load(f)
+
+    data.append(a_dict)
+
+    with open(channel_logfile) as f:
+        json.dump(data, f)
+
+    return "Logged", 200
 
 
 @app.errorhandler(404)
