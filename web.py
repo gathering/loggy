@@ -432,7 +432,7 @@ def store_message():
 
     data = []
 
-    with suppress:
+    with suppress(IOError):
         with open(channel_logfile) as f:
             data = json.load(f)
 
