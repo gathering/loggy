@@ -407,9 +407,12 @@ def show_channel(name):
 @app.route('/channel/<name>/<date>')
 def channel_date_route(name, date):
     if check_login():
-        readable = datetime.datetime.strptime(date, '%y%m%d').strftime('%A %d. %b %Y')
-        return render_template('channel.html', name=name, result=reversed(channel_date(name, date)),
-                               dates=create_date_list(name), readable=readable, check_access=check_access, username=session['username'])
+        if check_access_channel(session['username'], name):
+            readable = datetime.datetime.strptime(date, '%y%m%d').strftime('%A %d. %b %Y')
+            return render_template('channel.html', name=name, result=reversed(channel_date(name, date)),
+                                dates=create_date_list(name), readable=readable, check_access=check_access, username=session['username'])
+        else:
+            abort(403)
     else:
         abort(403)
 
