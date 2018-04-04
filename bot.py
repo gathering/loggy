@@ -6,12 +6,10 @@ import re
 # loggbot's ID as an environment variable
 BOT_ID = config.BOT_ID
 
-
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
 
 slack_client = SlackClient(config.SLACK_ID)
-
 
 def append_to_json(text, channel, user):
     date = time.strftime("%c")
@@ -125,9 +123,15 @@ def parse_slack_output(slack_rtm_output):
 
 
 def start_bot():
+    global BOT_ID, AT_BOT
     READ_WEBSOCKET_DELAY = 1  # 1 second delay between reading from firehose
     if slack_client.rtm_connect():
         print(" * LoggBot is connected to Slack and running!")
+        if not BOT_ID:
+            print(" * BOT_ID not set, fetching from slack api")
+            BOT_ID = slack_client.api_call("auth.test")['user_id']
+            AT_BOT = "<@" + BOT_ID + ">"
+        print(" * BOT_ID set to " + BOT_ID)
         while True:
             command, channel, user, ts = parse_slack_output(slack_client.rtm_read())
             #            username = request.form.get('user_name')
@@ -145,4 +149,5 @@ def stop_bot(self):
         self.process.terminate()
         self.process = None
 
-start_bot()
+if __name__ == '__main__':
+    start_bot()

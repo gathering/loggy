@@ -3,8 +3,7 @@ import hashlib
 import json
 import logging
 import os
-import urllib2
-from sets import Set
+from urllib.request import urlopen
 from flask import Flask, render_template, session, request, abort, redirect, url_for, send_from_directory
 
 import config
@@ -21,7 +20,7 @@ def api_login(username, password):
     login_parameters = "&username=" + username + "&password=" + md5
     request_url = "" + url + parameters + login_parameters
     try:
-        r = urllib2.urlopen(request_url)
+        r = urlopen(request_url)
     except:
         return False
 

@@ -5,19 +5,28 @@ from multiprocessing import Process
 
 import bot
 import web
-
+import os
+import glob
+import shutil
 
 def start_web():
-    print ' ## Starting web thread'
+    print (' ## Starting web thread')
     web.start_web()
 
 
 def start_bot():
-    print ' ## Starting bot thread'
+    print (' ## Starting bot thread')
     bot.start_bot()
 
-
 if __name__ == '__main__':
+
+    if (not os.path.isfile('users.json')):
+        print (' * No users, creating initial users file')
+        shutil.copy('example.users.json', 'users.json')
+
+    if (not len(glob.glob(os.path.join('logs/*'))) > 0):
+        print (' * No logs, creating initial general channel file')
+        shutil.copy('example.channel.json', 'logs/general.json')
 
     t1 = Process(target=start_bot)
     t2 = Process(target=start_web)
