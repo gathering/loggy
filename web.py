@@ -3,25 +3,24 @@ import hashlib
 import json
 import logging
 import os
-import urllib2
-from sets import Set
+from urllib.request import urlopen
 from flask import Flask, render_template, session, request, abort, redirect, url_for, send_from_directory
+from dotenv import load_dotenv
 
-import config
+load_dotenv('./.env')
 
 app = Flask(__name__)
 
-app.secret_key = config.SECRET_KEY
-
+app.secret_key = os.getenv("SECRET_KEY")
 
 def api_login(username, password):
-    url = config.API_URL
-    parameters = "?app=" + config.APP_KEY
+    url = os.getenv("API_URL")
+    parameters = "?app=" + os.getenv("APP_KEY")
     md5 = hashlib.md5(password).hexdigest()
     login_parameters = "&username=" + username + "&password=" + md5
     request_url = "" + url + parameters + login_parameters
     try:
-        r = urllib2.urlopen(request_url)
+        r = urlopen(request_url)
     except:
         return False
 
@@ -33,7 +32,7 @@ def api_login(username, password):
 
 
 def check_login():
-    if config.AUTH_EN:
+    if os.getenv("AUTH_EN") and os.getenv("AUTH_EN") == 'True':
         if 'username' in session:
             return True
         else:
