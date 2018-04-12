@@ -8,3 +8,4 @@ six==1.10.0
 slackclient==1.0.5
 websocket-client==0.40.0
 Werkzeug==0.12.1
+python-dotenv==0.8.2

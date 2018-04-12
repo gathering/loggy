@@ -16,13 +16,13 @@ The logs are saved in flatfile JSON files in the folder "json".
 	1. Enable bot user under "Features > Bot users"
 	1. Install App under "Settings > Install App"
 	1. Make a note of your "Bot User OAuth Access Token" (xoxb-...)
-1. Create and populate config.py
+1. Create and populate .env (or set variables in the runtime environment)
 	1. SLACK_ID; Your "Bot User OAuth Access Token"
 	1. BOT_ID; Not your bot user user, but a unique id returned by slack. Leave blank to try to autodetect
 	1. WEB_URL; The public/private url to your web server (only used in "click here to read log" messages)
 	1. API_URL
 	1. APP_KEY
-	1. AUTH_EN
+	1. AUTH_EN; Enable or disable Wannabe credentials login
 	1. SECRET_KEY; Something completely random, change this to invalidate all existing sessions
 1. Start container instance on your platform of choice
 

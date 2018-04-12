@@ -1,15 +1,19 @@
 import time
 from slackclient import SlackClient
-import config
 import re
+import os
+from dotenv import load_dotenv
+
+load_dotenv('./.env')
 
 # loggbot's ID as an environment variable
-BOT_ID = config.BOT_ID
+BOT_ID = os.getenv("BOT_ID")
+BOT_ID = ''
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
 
-slack_client = SlackClient(config.SLACK_ID)
+slack_client = SlackClient(os.getenv("SLACK_ID"))
 
 def append_to_json(text, channel, user):
     date = time.strftime("%c")
@@ -49,7 +53,7 @@ def handle_command(command, channel, user, ts):
 
     # Help menu
     if command == "?":
-        web_url = config.WEB_URL
+        web_url = os.getenv("WEB_URL")
         if web_url == "":
             web_url = "Not set in config"
             print(" * Warning: Web URL not set in config.")
