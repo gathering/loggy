@@ -8,12 +8,12 @@ import web
 
 
 def start_web():
-    print ' ## Starting web thread'
+    print (' ## Starting web thread')
     web.start_web()
 
 
 def start_bot():
-    print ' ## Starting bot thread'
+    print (' ## Starting bot thread')
     bot.start_bot()
 
 

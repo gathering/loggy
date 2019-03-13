@@ -273,7 +273,7 @@ def get_channels():
     ch = []
     for file in os.listdir("logs"):
         if file.endswith(".json"):
-            ch.append(file.replace(".json", "").decode('utf-8'))
+            ch.append(file.replace(".json", ""))
     return ch
 
 def get_channels_filtered_for_user(username):
