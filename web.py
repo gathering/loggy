@@ -3,7 +3,9 @@ import hashlib
 import json
 import logging
 import os
-from urllib.request import urlopen
+from urllib.request import urlopen      # Python 3
+# import urllib2                        # Python 2
+# from sets import Set                  # Built in with Python 3
 from flask import Flask, render_template, session, request, abort, redirect, url_for, send_from_directory
 from dotenv import load_dotenv
 
@@ -14,9 +16,11 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
 def api_login(username, password):
+
     url = os.getenv("API_URL")
     parameters = "?app=" + os.getenv("APP_KEY")
     md5 = hashlib.md5(password).hexdigest()
+
     login_parameters = "&username=" + username + "&password=" + md5
     request_url = "" + url + parameters + login_parameters
     try:
