@@ -1,3 +1,9 @@
 [
-  {"username": "username", "isAdmin": "True"}
+  {
+	  "username": "dummy",
+	  "isAdmin": "True",
+	  "channels": [
+		  { "channel": "general", "admin": "True" }
+	  ]
+  }
 ]
